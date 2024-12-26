@@ -1,36 +1,31 @@
-from db.database import setup_database
-from db.models import Shop, Product
+import argparse
+from db.models import Product, Shop
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 
-def view_shops(session):
-    shops = session.query(Shop).all()
-    for shop in shops:
-        print(shop)
-
-def view_products(session):
-    products = session.query(Product).all()
-    for product in products:
-        print(product)
+def view_products(shop_name):
+    engine = create_engine('your_database_url')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    shop = session.query(Shop).filter_by(name=shop_name).first()
+    if shop:
+        products = session.query(Product).filter_by(shop_id=shop.id).all()
+        for product in products:
+            print(f"Product: {product.name}, Price: {product.price}")
+    else:
+        print(f"No shop found with name: {shop_name}")
+    
+    session.close()
 
 def main():
-    session = setup_database()
-    print("Welcome to the Shop Management CLI!")
+    parser = argparse.ArgumentParser(description="Shop Management CLI")
+    parser.add_argument('--view-products', type=str, help='View products in a shop')
     
-    while True:
-        print("\nOptions:")
-        print("1. View Shops")
-        print("2. View Products")
-        print("3. Exit")
-        choice = input("Choose an option: ")
+    args = parser.parse_args()
 
-        if choice == "1":
-            view_shops(session)
-        elif choice == "2":
-            view_products(session)
-        elif choice == "3":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid option, try again.")
+    if args.view_products:
+        view_products(args.view_products)
 
 if __name__ == "__main__":
     main()
